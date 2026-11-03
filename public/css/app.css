@@ -26,6 +26,7 @@ body {
   color: var(--text-main);
   font-family: var(--font-sans);
   min-height: 100vh;
+  min-height: 100dvh;
   overflow-x: hidden;
   line-height: 1.4;
 }
@@ -100,8 +101,14 @@ body {
 .hero p { font-size: 1.05rem; color: var(--text-muted); max-width: 540px; margin-bottom: 28px; }
 .hero-actions { display: flex; flex-wrap: wrap; gap: 14px; }
 
-/* Room Screen Layout (Desktop Grid & Mobile Flex) */
-.room-page { display: flex; flex-direction: column; height: 100vh; height: 100dvh; overflow: hidden; }
+/* Room Screen Layout */
+.room-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
 
 .room-topbar {
   display: flex;
@@ -131,6 +138,7 @@ body {
   display: grid;
   grid-template-columns: 1fr 340px;
   flex: 1;
+  min-height: 0;
   overflow: hidden;
 }
 
@@ -143,7 +151,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 240px;
+  min-height: 200px;
 }
 .empty-player { text-align: center; color: var(--text-muted); padding: 20px; }
 .play-orb {
@@ -163,6 +171,14 @@ body {
 }
 
 /* Controls & Controls Panel */
+.room-body-wrap {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .room-body {
   padding: 16px;
   overflow-y: auto;
@@ -204,16 +220,19 @@ body {
 }
 .input-box input:focus { border-color: rgba(255, 255, 255, 0.3); }
 
-/* Chat Drawer/Panel */
+/* Chat Panel */
 .chat-panel {
   background: rgba(10, 10, 14, 0.95);
   border-left: 1px solid var(--border-glass);
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  height: 100%;
 }
-.chat-head { padding: 14px 16px; border-bottom: 1px solid var(--border-glass); }
+.chat-head { padding: 14px 16px; border-bottom: 1px solid var(--border-glass); flex-shrink: 0; }
 .chat-messages {
   flex: 1;
+  min-height: 0;
   padding: 16px;
   overflow-y: auto;
   display: flex;
@@ -231,26 +250,32 @@ body {
 .msg.partner { align-self: flex-start; background: rgba(255, 255, 255, 0.08); color: #ffffff; border-bottom-left-radius: 2px; }
 .msg-author { font-size: 0.65rem; font-weight: 700; opacity: 0.7; margin-bottom: 2px; }
 
-.chat-form { padding: 12px 14px; border-top: 1px solid var(--border-glass); display: flex; gap: 8px; }
+.chat-form {
+  padding: 12px 14px;
+  border-top: 1px solid var(--border-glass);
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  background: rgba(10, 10, 14, 0.98);
+}
 .chat-form input {
   flex: 1;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border-glass);
   border-radius: 99px;
-  padding: 8px 14px;
+  padding: 10px 16px;
   color: #fff;
   outline: none;
-  font-size: 0.88rem;
+  font-size: 0.9rem;
 }
 .chat-form button {
-  width: 36px; height: 36px; border-radius: 50%;
+  width: 38px; height: 38px; border-radius: 50%;
   background: #fff; color: #000; border: none; cursor: pointer; font-weight: 700;
 }
 
-/* Mobile Tabs Navigation */
+/* Mobile Navigation Breakpoint */
 .mobile-tabs { display: none; }
 
-/* Mobile Compatibility Breakpoint */
 @media (max-width: 768px) {
   .hero-actions { width: 100%; }
   .hero-actions .btn { flex: 1; text-align: center; }
@@ -259,12 +284,13 @@ body {
     display: flex;
     flex-direction: column;
     flex: 1;
+    min-height: 0;
     overflow: hidden;
   }
   
   .player-shell {
-    height: 40vh;
-    min-height: 220px;
+    height: 30vh;
+    min-height: 190px;
     flex-shrink: 0;
   }
 
@@ -292,31 +318,36 @@ body {
 
   .room-body-wrap {
     flex: 1;
-    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
     overflow: hidden;
   }
 
   .watch-column {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    height: 100%;
     overflow-y: auto;
   }
 
   .chat-panel {
-    display: none;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
     height: 100%;
     border-left: none;
   }
 
   [data-active-tab="watch"] .watch-column { display: flex; }
-  [data-active-tab="watch"] .chat-panel { display: none; }
+  [data-active-tab="watch"] .chat-panel { display: none !important; }
 
-  [data-active-tab="chat"] .watch-column { display: none; }
-  [data-active-tab="chat"] .chat-panel { display: flex; flex: 1; }
+  [data-active-tab="chat"] .watch-column { display: none !important; }
+  [data-active-tab="chat"] .chat-panel { display: flex !important; }
 }
 
-/* Setup Form Card */
+/* Setup Cards */
 .center-page { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
 .setup-card {
   background: rgba(18, 18, 24, 0.75);
