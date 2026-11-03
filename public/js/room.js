@@ -20,7 +20,7 @@ document.getElementById('copyCode').addEventListener('click', () => {
   showToast('Room code copied!');
 });
 
-// Mobile Tab Toggle Logic
+// Mobile Tab Toggle
 const roomBodyWrap = document.getElementById('roomBodyWrap');
 const tabWatchBtn = document.getElementById('tabWatchBtn');
 const tabChatBtn = document.getElementById('tabChatBtn');
@@ -39,11 +39,16 @@ if (tabWatchBtn && tabChatBtn) {
   });
 }
 
-// YouTube iFrame API setup
+// Media Elements
+const localVideo = document.getElementById('localVideo');
+const emptyPlayer = document.getElementById('emptyPlayer');
+const youtubePlayerEl = document.getElementById('youtubePlayer');
+
 let ytPlayer = null;
 let currentSourceType = null;
 let isSyncing = false;
 
+// YouTube iFrame API
 const tag = document.createElement('script');
 tag.src = "https://www.youtube.com/iframe_api";
 document.head.appendChild(tag);
@@ -66,6 +71,17 @@ function onYouTubeIframeAPIReady() {
   });
 }
 
+// Native Video Sync Listeners (Google Drive & Local Video)
+localVideo.onplay = () => {
+  if (!isSyncing) socket.emit('media-action', { type: 'play', time: localVideo.currentTime });
+};
+localVideo.onpause = () => {
+  if (!isSyncing) socket.emit('media-action', { type: 'pause', time: localVideo.currentTime });
+};
+localVideo.onseeking = () => {
+  if (!isSyncing) socket.emit('media-action', { type: 'seek', time: localVideo.currentTime });
+};
+
 // Join Room
 socket.emit('join-room', { roomCode, name: userName }, (res) => {
   if (!res.success) {
@@ -79,7 +95,7 @@ socket.on('room-members', (members) => {
   document.getElementById('partnerName').textContent = partner ? partner.name : 'Waiting for partner...';
 });
 
-// Source Switcher Panels
+// Source Selector Tabs
 const btnYoutube = document.getElementById('btnYoutube');
 const btnDrive = document.getElementById('btnDrive');
 const btnLocal = document.getElementById('btnLocal');
@@ -107,6 +123,12 @@ function switchTab(type) {
   }
 }
 
+// Extract Google Drive File ID
+function extractDriveId(url) {
+  const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/id=([a-zA-Z0-9_-]+)/);
+  return match ? match[1] : null;
+}
+
 // Load Video Events
 document.getElementById('loadYoutube').addEventListener('click', () => {
   const url = document.getElementById('youtubeUrl').value;
@@ -120,16 +142,16 @@ document.getElementById('loadYoutube').addEventListener('click', () => {
 
 document.getElementById('loadDrive').addEventListener('click', () => {
   const url = document.getElementById('driveUrl').value;
-  const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
-  if (match) {
-    const embedUrl = `https://drive.google.com/file/d/${match[1]}/preview`;
-    socket.emit('change-source', { type: 'gdrive', url: embedUrl, title: 'Google Drive Video' });
+  const fileId = extractDriveId(url);
+  if (fileId) {
+    // Direct video stream URL for HTML5 player
+    const directStreamUrl = `https://lh3.googleusercontent.com/d/${fileId}`;
+    socket.emit('change-source', { type: 'gdrive', url: directStreamUrl, title: 'Google Drive Video' });
   } else {
-    showToast('Invalid Google Drive share link');
+    showToast('Invalid Google Drive link');
   }
 });
 
-const localVideo = document.getElementById('localVideo');
 document.getElementById('localFileInput').addEventListener('change', (e) => {
   const file = e.target.files[0];
   if (file) {
@@ -140,20 +162,19 @@ document.getElementById('localFileInput').addEventListener('change', (e) => {
 });
 
 socket.on('source-changed', (data) => {
-  document.getElementById('emptyPlayer').style.display = 'none';
-  document.getElementById('youtubePlayer').style.display = 'none';
-  document.getElementById('driveIframe').style.display = 'none';
+  emptyPlayer.style.display = 'none';
+  youtubePlayerEl.style.display = 'none';
   localVideo.style.display = 'none';
 
   currentSourceType = data.type;
 
   if (data.type === 'youtube' && ytPlayer) {
-    document.getElementById('youtubePlayer').style.display = 'block';
+    youtubePlayerEl.style.display = 'block';
     ytPlayer.loadVideoById(data.sourceUrl);
   } else if (data.type === 'gdrive') {
-    const driveIframe = document.getElementById('driveIframe');
-    driveIframe.style.display = 'block';
-    driveIframe.src = data.sourceUrl;
+    localVideo.style.display = 'block';
+    localVideo.src = data.sourceUrl;
+    localVideo.play().catch(() => {});
   } else if (data.type === 'local') {
     localVideo.style.display = 'block';
     showToast('Host loaded local video. Select the same video on your device to watch.');
@@ -162,18 +183,9 @@ socket.on('source-changed', (data) => {
 
 function setupLocalPlayer(url) {
   localVideo.style.display = 'block';
-  document.getElementById('emptyPlayer').style.display = 'none';
+  emptyPlayer.style.display = 'none';
   localVideo.src = url;
-
-  localVideo.onplay = () => {
-    if (!isSyncing) socket.emit('media-action', { type: 'play', time: localVideo.currentTime });
-  };
-  localVideo.onpause = () => {
-    if (!isSyncing) socket.emit('media-action', { type: 'pause', time: localVideo.currentTime });
-  };
-  localVideo.onseeking = () => {
-    if (!isSyncing) socket.emit('media-action', { type: 'seek', time: localVideo.currentTime });
-  };
+  localVideo.play().catch(() => {});
 }
 
 socket.on('media-action', (action) => {
@@ -182,9 +194,9 @@ socket.on('media-action', (action) => {
     if (Math.abs(ytPlayer.getCurrentTime() - action.time) > 1.2) ytPlayer.seekTo(action.time, true);
     if (action.type === 'play') ytPlayer.playVideo();
     if (action.type === 'pause') ytPlayer.pauseVideo();
-  } else if (currentSourceType === 'local' && localVideo) {
+  } else if ((currentSourceType === 'gdrive' || currentSourceType === 'local') && localVideo) {
     if (Math.abs(localVideo.currentTime - action.time) > 1.2) localVideo.currentTime = action.time;
-    if (action.type === 'play') localVideo.play();
+    if (action.type === 'play') localVideo.play().catch(() => {});
     if (action.type === 'pause') localVideo.pause();
   }
   setTimeout(() => { isSyncing = false; }, 600);
