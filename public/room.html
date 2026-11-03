@@ -25,10 +25,9 @@
       <div class="empty-player" id="emptyPlayer">
         <div class="play-orb">♡</div>
         <h2 style="font-size:1.1rem; color:#fff;">Choose something to watch</h2>
-        <p style="font-size:0.8rem;">Select YouTube, Google Drive, or a Local Video below.</p>
+        <p style="font-size:0.8rem;">Select YouTube, Dropbox, or a Local Video below.</p>
       </div>
       <div id="youtubePlayer" style="display:none;"></div>
-      <iframe id="driveIframe" style="display:none;" allow="autoplay" allowfullscreen></iframe>
       <video id="localVideo" playsinline webkit-playsinline controls style="display:none;"></video>
     </div>
   </section>
@@ -48,9 +47,9 @@
           <span>▶</span>
           <div><b>YouTube</b><small>Paste URL</small></div>
         </button>
-        <button class="source-card" id="btnDrive">
-          <span>☁</span>
-          <div><b>Google Drive</b><small>Share link</small></div>
+        <button class="source-card" id="btnDropbox">
+          <span>📦</span>
+          <div><b>Dropbox</b><small>Share link</small></div>
         </button>
         <button class="source-card" id="btnLocal">
           <span>▣</span>
@@ -63,9 +62,9 @@
         <button id="loadYoutube" class="btn btn-primary">Load</button>
       </div>
 
-      <div class="input-box" id="panelDrive" style="display: none;">
-        <input id="driveUrl" placeholder="Paste Google Drive link…" autocomplete="off">
-        <button id="loadDrive" class="btn btn-primary">Load</button>
+      <div class="input-box" id="panelDropbox" style="display: none;">
+        <input id="dropboxUrl" placeholder="Paste Dropbox share link…" autocomplete="off">
+        <button id="loadDropbox" class="btn btn-primary">Load</button>
       </div>
 
       <div class="input-box" id="panelLocal" style="display: none;">

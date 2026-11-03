@@ -39,9 +39,8 @@ if (tabWatchBtn && tabChatBtn) {
   });
 }
 
-// Player Elements
+// Media Elements
 const localVideo = document.getElementById('localVideo');
-const driveIframe = document.getElementById('driveIframe');
 const emptyPlayer = document.getElementById('emptyPlayer');
 const youtubePlayerEl = document.getElementById('youtubePlayer');
 
@@ -72,7 +71,7 @@ function onYouTubeIframeAPIReady() {
   });
 }
 
-// Local Video Sync Listeners
+// Native Video Sync Listeners (Dropbox MP4 & Local Video)
 localVideo.onplay = () => {
   if (!isSyncing) socket.emit('media-action', { type: 'play', time: localVideo.currentTime });
 };
@@ -96,37 +95,46 @@ socket.on('room-members', (members) => {
   document.getElementById('partnerName').textContent = partner ? partner.name : 'Waiting for partner...';
 });
 
-// Source Switcher Tabs
+// Source Selector Tabs
 const btnYoutube = document.getElementById('btnYoutube');
-const btnDrive = document.getElementById('btnDrive');
+const btnDropbox = document.getElementById('btnDropbox');
 const btnLocal = document.getElementById('btnLocal');
 const panelYoutube = document.getElementById('panelYoutube');
-const panelDrive = document.getElementById('panelDrive');
+const panelDropbox = document.getElementById('panelDropbox');
 const panelLocal = document.getElementById('panelLocal');
 
 btnYoutube.addEventListener('click', () => switchTab('youtube'));
-btnDrive.addEventListener('click', () => switchTab('gdrive'));
+btnDropbox.addEventListener('click', () => switchTab('dropbox'));
 btnLocal.addEventListener('click', () => switchTab('local'));
 
 function switchTab(type) {
-  [btnYoutube, btnDrive, btnLocal].forEach(b => b.classList.remove('active'));
-  [panelYoutube, panelDrive, panelLocal].forEach(p => p.style.display = 'none');
+  [btnYoutube, btnDropbox, btnLocal].forEach(b => b.classList.remove('active'));
+  [panelYoutube, panelDropbox, panelLocal].forEach(p => p.style.display = 'none');
 
   if (type === 'youtube') {
     btnYoutube.classList.add('active');
     panelYoutube.style.display = 'flex';
-  } else if (type === 'gdrive') {
-    btnDrive.classList.add('active');
-    panelDrive.style.display = 'flex';
+  } else if (type === 'dropbox') {
+    btnDropbox.classList.add('active');
+    panelDropbox.style.display = 'flex';
   } else if (type === 'local') {
     btnLocal.classList.add('active');
     panelLocal.style.display = 'flex';
   }
 }
 
-function extractDriveId(url) {
-  const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/id=([a-zA-Z0-9_-]+)/);
-  return match ? match[1] : null;
+// Auto-convert any Dropbox link into a direct stream URL
+function formatDropboxUrl(url) {
+  let cleanUrl = url.trim();
+  if (cleanUrl.includes('dropbox.com')) {
+    if (cleanUrl.includes('dl=0')) {
+      cleanUrl = cleanUrl.replace('dl=0', 'raw=1');
+    } else if (!cleanUrl.includes('raw=1')) {
+      cleanUrl += (cleanUrl.includes('?') ? '&raw=1' : '?raw=1');
+    }
+    cleanUrl = cleanUrl.replace('www.dropbox.com', 'dl.dropboxusercontent.com');
+  }
+  return cleanUrl;
 }
 
 // Load Video Actions
@@ -140,14 +148,13 @@ document.getElementById('loadYoutube').addEventListener('click', () => {
   }
 });
 
-document.getElementById('loadDrive').addEventListener('click', () => {
-  const url = document.getElementById('driveUrl').value;
-  const fileId = extractDriveId(url);
-  if (fileId) {
-    const embedUrl = `https://drive.google.com/file/d/${fileId}/preview`;
-    socket.emit('change-source', { type: 'gdrive', url: embedUrl, title: 'Google Drive Video' });
+document.getElementById('loadDropbox').addEventListener('click', () => {
+  const rawUrl = document.getElementById('dropboxUrl').value;
+  const streamUrl = formatDropboxUrl(rawUrl);
+  if (streamUrl) {
+    socket.emit('change-source', { type: 'dropbox', url: streamUrl, title: 'Dropbox Video' });
   } else {
-    showToast('Invalid Google Drive link');
+    showToast('Invalid Dropbox link');
   }
 });
 
@@ -163,7 +170,6 @@ document.getElementById('localFileInput').addEventListener('change', (e) => {
 socket.on('source-changed', (data) => {
   emptyPlayer.style.display = 'none';
   youtubePlayerEl.style.display = 'none';
-  driveIframe.style.display = 'none';
   localVideo.style.display = 'none';
 
   currentSourceType = data.type;
@@ -171,9 +177,10 @@ socket.on('source-changed', (data) => {
   if (data.type === 'youtube' && ytPlayer) {
     youtubePlayerEl.style.display = 'block';
     ytPlayer.loadVideoById(data.sourceUrl);
-  } else if (data.type === 'gdrive') {
-    driveIframe.style.display = 'block';
-    driveIframe.src = data.sourceUrl;
+  } else if (data.type === 'dropbox') {
+    localVideo.style.display = 'block';
+    localVideo.src = data.sourceUrl;
+    localVideo.play().catch(() => {});
   } else if (data.type === 'local') {
     localVideo.style.display = 'block';
     showToast('Host loaded local video. Select the same video on your device to watch.');
@@ -193,7 +200,7 @@ socket.on('media-action', (action) => {
     if (Math.abs(ytPlayer.getCurrentTime() - action.time) > 1.2) ytPlayer.seekTo(action.time, true);
     if (action.type === 'play') ytPlayer.playVideo();
     if (action.type === 'pause') ytPlayer.pauseVideo();
-  } else if (currentSourceType === 'local' && localVideo) {
+  } else if ((currentSourceType === 'dropbox' || currentSourceType === 'local') && localVideo) {
     if (Math.abs(localVideo.currentTime - action.time) > 1.2) localVideo.currentTime = action.time;
     if (action.type === 'play') localVideo.play().catch(() => {});
     if (action.type === 'pause') localVideo.pause();
