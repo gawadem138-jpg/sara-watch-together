@@ -101,7 +101,7 @@ body {
 .hero p { font-size: 1.05rem; color: var(--text-muted); max-width: 540px; margin-bottom: 28px; }
 .hero-actions { display: flex; flex-wrap: wrap; gap: 14px; }
 
-/* Room Layout */
+/* Room Layout Desktop */
 .room-page {
   display: flex;
   flex-direction: column;
@@ -142,7 +142,7 @@ body {
   overflow: hidden;
 }
 
-/* Video Stage */
+/* Video Stage Desktop */
 .player-shell {
   display: flex;
   flex-direction: column;
@@ -226,7 +226,7 @@ body {
 }
 .input-box input:focus { border-color: rgba(255, 255, 255, 0.3); }
 
-/* Chat Panel */
+/* Chat Panel Desktop */
 .chat-panel {
   background: rgba(10, 10, 14, 0.95);
   border-left: 1px solid var(--border-glass);
@@ -279,7 +279,7 @@ body {
   background: #fff; color: #000; border: none; cursor: pointer; font-weight: 700;
 }
 
-/* Mobile Layout Breakpoints */
+/* Mobile Breakpoints & Locked Player Height */
 .mobile-tabs { display: none; }
 
 @media (max-width: 768px) {
@@ -289,7 +289,7 @@ body {
   .room-page {
     position: fixed;
     inset: 0;
-    width: 100%;
+    width: 100vw;
     height: 100dvh;
     overflow: hidden;
   }
@@ -302,10 +302,12 @@ body {
     overflow: hidden;
   }
   
+  /* Strictly lock video player to 16:9 ratio based on phone width */
   .player-shell {
-    height: 28vh;
-    min-height: 180px;
-    flex-shrink: 0;
+    width: 100vw;
+    height: 56.25vw;
+    max-height: 40vh;
+    flex-shrink: 0 !important;
     z-index: 20;
     position: relative;
   }
