@@ -20,7 +20,7 @@ document.getElementById('copyCode').addEventListener('click', () => {
   showToast('Room code copied!');
 });
 
-// Mobile Tab Toggle
+// Mobile Tab Switcher
 const roomBodyWrap = document.getElementById('roomBodyWrap');
 const tabWatchBtn = document.getElementById('tabWatchBtn');
 const tabChatBtn = document.getElementById('tabChatBtn');
@@ -39,8 +39,9 @@ if (tabWatchBtn && tabChatBtn) {
   });
 }
 
-// Media Elements
+// Player Elements
 const localVideo = document.getElementById('localVideo');
+const driveIframe = document.getElementById('driveIframe');
 const emptyPlayer = document.getElementById('emptyPlayer');
 const youtubePlayerEl = document.getElementById('youtubePlayer');
 
@@ -71,7 +72,7 @@ function onYouTubeIframeAPIReady() {
   });
 }
 
-// Native Video Sync Listeners (Google Drive & Local Video)
+// Local Video Sync Listeners
 localVideo.onplay = () => {
   if (!isSyncing) socket.emit('media-action', { type: 'play', time: localVideo.currentTime });
 };
@@ -95,7 +96,7 @@ socket.on('room-members', (members) => {
   document.getElementById('partnerName').textContent = partner ? partner.name : 'Waiting for partner...';
 });
 
-// Source Selector Tabs
+// Source Switcher Tabs
 const btnYoutube = document.getElementById('btnYoutube');
 const btnDrive = document.getElementById('btnDrive');
 const btnLocal = document.getElementById('btnLocal');
@@ -123,13 +124,12 @@ function switchTab(type) {
   }
 }
 
-// Extract Google Drive File ID
 function extractDriveId(url) {
   const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/) || url.match(/id=([a-zA-Z0-9_-]+)/);
   return match ? match[1] : null;
 }
 
-// Load Video Events
+// Load Video Actions
 document.getElementById('loadYoutube').addEventListener('click', () => {
   const url = document.getElementById('youtubeUrl').value;
   const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
@@ -144,9 +144,8 @@ document.getElementById('loadDrive').addEventListener('click', () => {
   const url = document.getElementById('driveUrl').value;
   const fileId = extractDriveId(url);
   if (fileId) {
-    // Direct video stream URL for HTML5 player
-    const directStreamUrl = `https://lh3.googleusercontent.com/d/${fileId}`;
-    socket.emit('change-source', { type: 'gdrive', url: directStreamUrl, title: 'Google Drive Video' });
+    const embedUrl = `https://drive.google.com/file/d/${fileId}/preview`;
+    socket.emit('change-source', { type: 'gdrive', url: embedUrl, title: 'Google Drive Video' });
   } else {
     showToast('Invalid Google Drive link');
   }
@@ -164,6 +163,7 @@ document.getElementById('localFileInput').addEventListener('change', (e) => {
 socket.on('source-changed', (data) => {
   emptyPlayer.style.display = 'none';
   youtubePlayerEl.style.display = 'none';
+  driveIframe.style.display = 'none';
   localVideo.style.display = 'none';
 
   currentSourceType = data.type;
@@ -172,9 +172,8 @@ socket.on('source-changed', (data) => {
     youtubePlayerEl.style.display = 'block';
     ytPlayer.loadVideoById(data.sourceUrl);
   } else if (data.type === 'gdrive') {
-    localVideo.style.display = 'block';
-    localVideo.src = data.sourceUrl;
-    localVideo.play().catch(() => {});
+    driveIframe.style.display = 'block';
+    driveIframe.src = data.sourceUrl;
   } else if (data.type === 'local') {
     localVideo.style.display = 'block';
     showToast('Host loaded local video. Select the same video on your device to watch.');
@@ -194,7 +193,7 @@ socket.on('media-action', (action) => {
     if (Math.abs(ytPlayer.getCurrentTime() - action.time) > 1.2) ytPlayer.seekTo(action.time, true);
     if (action.type === 'play') ytPlayer.playVideo();
     if (action.type === 'pause') ytPlayer.pauseVideo();
-  } else if ((currentSourceType === 'gdrive' || currentSourceType === 'local') && localVideo) {
+  } else if (currentSourceType === 'local' && localVideo) {
     if (Math.abs(localVideo.currentTime - action.time) > 1.2) localVideo.currentTime = action.time;
     if (action.type === 'play') localVideo.play().catch(() => {});
     if (action.type === 'pause') localVideo.pause();
@@ -202,7 +201,7 @@ socket.on('media-action', (action) => {
   setTimeout(() => { isSyncing = false; }, 600);
 });
 
-// Chat
+// Chat Logic
 const chatForm = document.getElementById('chatForm');
 const chatInput = document.getElementById('chatInput');
 const chatMessages = document.getElementById('chatMessages');
