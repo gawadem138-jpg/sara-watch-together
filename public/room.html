@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Our Room — SARA</title>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body class="room-page">
+
+<header class="room-topbar">
+  <a class="brand" href="/">SARA<span>.</span></a>
+  <div class="room-info">
+    <span class="room-label">ROOM</span>
+    <strong id="roomCode">------</strong>
+    <button id="copyCode" class="icon-btn" title="Copy code">⧉</button>
+  </div>
+  <a href="/" class="btn btn-ghost" style="padding: 4px 12px; font-size: 0.78rem;">Leave</a>
+</header>
+
+<main class="room-layout">
+  <!-- Sticky Player Shell -->
+  <section class="player-shell">
+    <div class="player-stage" id="playerStage">
+      <div class="empty-player" id="emptyPlayer">
+        <div class="play-orb">♡</div>
+        <h2 style="font-size:1.1rem; color:#fff;">Choose something to watch</h2>
+        <p style="font-size:0.8rem;">Select YouTube, Google Drive, or a Local Video below.</p>
+      </div>
+      <div id="youtubePlayer" style="display:none;"></div>
+      <iframe id="driveIframe" style="display:none;" allow="autoplay" allowfullscreen></iframe>
+      <video id="localVideo" playsinline webkit-playsinline controls style="display:none;"></video>
+    </div>
+  </section>
+
+  <!-- Mobile Tab Switcher -->
+  <nav class="mobile-tabs">
+    <button class="tab-btn active" id="tabWatchBtn" type="button">Controls & Sources</button>
+    <button class="tab-btn" id="tabChatBtn" type="button">Chat</button>
+  </nav>
+
+  <!-- Content Body -->
+  <div class="room-body-wrap" id="roomBodyWrap" data-active-tab="watch">
+    <!-- Controls Column -->
+    <div class="watch-column room-body">
+      <div class="source-panel">
+        <button class="source-card active" id="btnYoutube">
+          <span>▶</span>
+          <div><b>YouTube</b><small>Paste URL</small></div>
+        </button>
+        <button class="source-card" id="btnDrive">
+          <span>☁</span>
+          <div><b>Google Drive</b><small>Share link</small></div>
+        </button>
+        <button class="source-card" id="btnLocal">
+          <span>▣</span>
+          <div><b>Local video</b><small>Select file</small></div>
+        </button>
+      </div>
+
+      <div class="input-box" id="panelYoutube">
+        <input id="youtubeUrl" placeholder="Paste YouTube link…" autocomplete="off">
+        <button id="loadYoutube" class="btn btn-primary">Load</button>
+      </div>
+
+      <div class="input-box" id="panelDrive" style="display: none;">
+        <input id="driveUrl" placeholder="Paste Google Drive link…" autocomplete="off">
+        <button id="loadDrive" class="btn btn-primary">Load</button>
+      </div>
+
+      <div class="input-box" id="panelLocal" style="display: none;">
+        <input type="file" id="localFileInput" accept="video/*">
+      </div>
+    </div>
+
+    <!-- Chat Column -->
+    <aside class="chat-panel" id="chatPanel">
+      <div class="chat-head">
+        <span class="eyebrow">PARTNER CHAT</span>
+        <h3 id="partnerName" style="font-size:0.95rem; font-weight:600;">Waiting for partner...</h3>
+      </div>
+      <div class="chat-messages" id="chatMessages"></div>
+      <div id="typingIndicator" style="font-size:0.7rem; color:var(--text-muted); padding:0 16px; min-height:14px;"></div>
+      <form class="chat-form" id="chatForm">
+        <input id="chatInput" maxlength="500" placeholder="Write a message…" autocomplete="off">
+        <button type="submit">↑</button>
+      </form>
+    </aside>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/js/room.js"></script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Create Room — SARA</title>
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body class="center-page">
+<main class="setup-card">
+  <span class="eyebrow">OUR PRIVATE ROOM</span>
+  <h1>A room for us.<br><em>Just press play.</em></h1>
+  <label>Display name</label>
+  <input id="name" placeholder="Your name" autocomplete="off" maxlength="30">
+  <button id="createBtn" class="btn btn-primary" style="width:100%; margin-top:20px;">Create our room ♡</button>
+  <a href="/" style="display:block; text-align:center; font-size:0.8rem; color:var(--text-muted); margin-top:16px;">← Back</a>
+</main>
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  document.getElementById('createBtn').addEventListener('click', () => {
+    const name = document.getElementById('name').value.trim() || 'Host';
+    sessionStorage.setItem('sara_name', name);
+    const socket = io();
+    socket.emit('create-room', { name }, (res) => {
+      if (res.success) window.location.href = `/room?code=${res.roomCode}`;
+    });
+  });
+</script>
+</body>
+</html>
